@@ -1,5 +1,6 @@
 var express = require("express");
 var router = express.Router();
+
 const Trip = require("../models/trips");
 
 router.get("/", (req, res) => {
@@ -11,20 +12,29 @@ router.get("/", (req, res) => {
 router.post("/search", (req, res) => {
   if (!req.body.departure || !req.body.arrival || !req.body.date) {
     return res.json({
-      result: true,
-      message: "merci de remplir tous les champs",
+      result: false,
+      message: "Trip not found",
     });
   }
   Trip.find({
-    departure: req.body.departure,
-    arrival: req.body.arrival,
+    departure: { $regex : new RegExp(req.body.departure, "i")},
+    arrival: { $regex: new RegExp(req.body.arrival, "i")},
     date: req.body.date,
-    price: req.body.price,
-  }).then((data) => {
-    if (data) {
-      return res.json({ result: true, message: "voyages trouvés" });
+  }).then((trips) => {
+    if (trips.length === 0) {
+      return res.json({ result: false, message: "Trip not found" });
     } else {
-      return res.json({ result: false, message: "aucun voyages trouvés" });
+      let dataTrip = [];
+      for (let i=0; i<trips.length; i++) {
+        const tripFound = {
+          departure: trips[i].departure,
+          arrival: trips[i].arrival,
+          date: trips[i].date,
+          price: trips[i].price,
+        }
+        dataTrip.push(tripFound)
+      }
+      return res.json({ result: true, dataTrip });
     }
   });
 });
