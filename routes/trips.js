@@ -15,7 +15,7 @@ router.post("/search", (req, res) => {
       message: "merci de remplir tous les champs",
     });
   }
-  Trip.findOne({
+  Trip.find({
     departure: req.body.departure,
     arrival: req.body.arrival,
     date: req.body.date,
