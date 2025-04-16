@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-
+var moment = require("moment");
 const Trip = require("../models/trips");
 
 router.get("/", (req, res) => {
@@ -16,27 +16,33 @@ router.post("/search", (req, res) => {
       message: "Trip not found",
     });
   }
+  const date = moment.utc(req.body.date);
+  const from = date.startOf("day").toDate();
+  const to = date.endOf("day").toDate();
+
   Trip.find({
-    departure: { $regex : new RegExp(req.body.departure, "i")},
-    arrival: { $regex: new RegExp(req.body.arrival, "i")},
-    date: req.body.date,
-  }).then((trips) => {
-    if (trips.length === 0) {
-      return res.json({ result: false, message: "Trip not found" });
-    } else {
-      let dataTrip = [];
-      for (let i=0; i<trips.length; i++) {
-        const tripFound = {
-          departure: trips[i].departure,
-          arrival: trips[i].arrival,
-          date: trips[i].date,
-          price: trips[i].price,
+    departure: { $regex: new RegExp(req.body.departure, "i") },
+    arrival: { $regex: new RegExp(req.body.arrival, "i") },
+    date: { $gt: from, $lte: to },
+  })
+    .sort({ date: 1 })
+    .then((trips) => {
+      if (trips.length === 0) {
+        return res.json({ result: false, message: "Trip not found" });
+      } else {
+        let dataTrip = [];
+        for (let i = 0; i < trips.length; i++) {
+          const tripFound = {
+            departure: trips[i].departure,
+            arrival: trips[i].arrival,
+            date: trips[i].date,
+            price: trips[i].price,
+          };
+          dataTrip.push(tripFound);
         }
-        dataTrip.push(tripFound)
+        return res.json({ result: true, dataTrip });
       }
-      return res.json({ result: true, dataTrip });
-    }
-  });
+    });
 });
 
 module.exports = router;
