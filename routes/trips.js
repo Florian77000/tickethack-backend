@@ -25,14 +25,15 @@ router.post("/search", (req, res) => {
     arrival: { $regex: new RegExp(req.body.arrival, "i") },
     date: { $gt: from, $lte: to },
   })
-    .sort({ date: 1 })
+    .sort({ date: 1 }) // permet de trier par horaire du plus petit (matin) au plus grand (soir)
     .then((trips) => {
-      if (trips.length === 0) {
+      if (!trips) {
         return res.json({ result: false, message: "Trip not found" });
       } else {
         let dataTrip = [];
-        for (let i = 0; i < trips.length; i++) {
+        for (let i = 0; i < trips.length; i++) { //
           const tripFound = {
+            _id: trips[i]._id,
             departure: trips[i].departure,
             arrival: trips[i].arrival,
             date: trips[i].date,
